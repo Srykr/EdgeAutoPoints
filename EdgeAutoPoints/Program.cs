@@ -24,9 +24,9 @@ namespace EdgeAutoPoints
                 var bbcRestWorld = @"http://feeds.bbci.co.uk/news/rss.xml?edition=int";
 
                 XmlReader reader;
-                SyndicationFeed feed;
+                SyndicationFeed feed;                
+                
                 //RunFeedProcess(Url);
-
                 RunFeedProcess(TulsaNewsUrl);
                 RunFeedProcess(bbcUrl);
                 RunFeedProcess(bbcUSCanada);
@@ -51,9 +51,9 @@ namespace EdgeAutoPoints
             {
                 Item.Title = item.Title.Text;
 
-                //Console.WriteLine(Item.Title);
+                Console.WriteLine(Item.Title);
 
-                System.Threading.Thread.Sleep(2000);
+                System.Threading.Thread.Sleep(4000);
 
                 var search = Process.Start("microsoft-edge:https://www.bing.com/search?q=" + Item.Title + "");
 
