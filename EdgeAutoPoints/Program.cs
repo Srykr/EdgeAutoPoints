@@ -98,8 +98,8 @@ namespace EdgeAutoPoints
                                + calcTitle);
                 Thread.Sleep(randSleepTimer * 1000);
 
-                //var search = Process.Start("microsoft-edge:https://www.bing.com/search?q=" + item.Item.Title.Text + "");
-                //search?.WaitForExit();
+                var search = Process.Start("microsoft-edge:https://www.bing.com/search?q=" + item.Item.Title.Text + "");
+                search?.WaitForExit();
             }
 
             KillIt();
