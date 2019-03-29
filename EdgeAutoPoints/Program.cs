@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.ServiceModel.Syndication;
 using System.Threading;
 using System.Xml;
@@ -10,6 +11,43 @@ namespace EdgeAutoPoints
 {
     internal class Program
     {
+        //https://stackoverflow.com/questions/1119841/net-console-application-exit-event
+        static bool exitSystem = false;
+        #region Trap application termination
+        [DllImport("Kernel32")]
+        private static extern bool SetConsoleCtrlHandler(EventHandler handler, bool add);
+
+        private delegate bool EventHandler(CtrlType sig);
+        static EventHandler _handler;
+
+        enum CtrlType
+        {
+            CTRL_C_EVENT = 0,
+            CTRL_BREAK_EVENT = 1,
+            CTRL_CLOSE_EVENT = 2,
+            CTRL_LOGOFF_EVENT = 5,
+            CTRL_SHUTDOWN_EVENT = 6
+        }
+
+        private static bool Handler(CtrlType sig)
+        {
+            Console.WriteLine("Exiting system due to external CTRL-C, or process kill, or shutdown");
+
+            //do your cleanup here
+            KillIt();
+
+            Console.WriteLine("Cleanup complete");
+
+            //allow main to run off
+            exitSystem = true;
+
+            //shutdown right away so there are no lingering threads
+            Environment.Exit(-1);
+
+            return true;
+        }
+        #endregion
+
         public class SyndicationItemWIndex
         {
             public int Index { get; set; }
@@ -21,29 +59,27 @@ namespace EdgeAutoPoints
         
         public static void Main()
         {
-            var items = getSyndicationItems();
-
-            var answer = "";
-            Console.WriteLine("Start earning points on (" + items.Count + " pages) in Edge? (Yes/No)");
-            answer = Console.ReadLine();
-            if (answer == "Yes" || answer == "yes" || answer == "Y" || answer == "y")
+            // Some biolerplate to react to close window event, CTRL-C, kill, etc
+            _handler += new EventHandler(Handler);
+            SetConsoleCtrlHandler(_handler, true);
+            AppStart();
+            //hold the console so it doesn’t run off the end
+            while (!exitSystem)
             {
-                //randomize
-                var shuffledItems = new List<SyndicationItemWIndex>();
-                shuffledItems.AddRange(items.OrderBy(a => Guid.NewGuid()).ToList());
-
-                RunFeedProcess(shuffledItems);
+                Thread.Sleep(500);
             }
-
-            else
-            {
-                Console.WriteLine("Why did you even open this...?");
-            }
-
-            Console.WriteLine("Have a nice day!");
-            Console.ReadKey();
         }
 
+        public static void AppStart()
+        {
+            var items = getSyndicationItems();
+            Console.WriteLine("Start earning points on (" + items.Count + " pages) in Edge!");
+            //randomize
+            var shuffledItems = new List<SyndicationItemWIndex>();
+            shuffledItems.AddRange(items.OrderBy(a => Guid.NewGuid()).ToList());
+            RunFeedProcess(shuffledItems);
+        }
+        
         private static List<SyndicationItemWIndex> addIndexToList(List<SyndicationItem> items) 
         {
             return items.Select((item, index) => new SyndicationItemWIndex { Index = index, Item = item }).ToList();
@@ -113,7 +149,12 @@ namespace EdgeAutoPoints
 
         private static void KillIt()
         {
-            foreach (var process in Process.GetProcessesByName("MicrosoftEdgeCP")) process.Kill();
+            var allProcs = Process.GetProcessesByName("MicrosoftEdge");
+            foreach (var process in allProcs)
+            {
+                process.Kill();
+                
+            }
         }
     }
 }
