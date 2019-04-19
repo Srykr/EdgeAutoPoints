@@ -45,7 +45,7 @@ namespace EdgeAutoPoints
 
             //get all items
             var items = new List<SyndicationItem>();
-            items.AddRange(getSyndicationFeed(TulsaNewsUrl).Items.ToList());
+          //  items.AddRange(getSyndicationFeed(TulsaNewsUrl).Items.ToList());
             items.AddRange(getSyndicationFeed(bbcUrl).Items.ToList());
             items.AddRange(getSyndicationFeed(bbcUSCanada).Items.ToList());
             items.AddRange(getSyndicationFeed(bbcRestWorld).Items.ToList());
